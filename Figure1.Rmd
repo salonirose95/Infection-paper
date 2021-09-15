@@ -1,0 +1,192 @@
+---
+title: "Figure1"
+author: "Saloni"
+date: "20/03/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+
+## Prepare for analyses
+library(ggplot2)
+library(tidyr)
+library(grid)
+library(reshape2)
+library(dplyr)
+library(readxl)
+library(stringr)
+library(matrixStats)
+library(gplots)
+library(ggsignif)
+library(ggpubr)
+library(gridExtra)
+library(ggsci)
+library(extrafont)
+library(FSA)
+library(fmsb)
+
+
+
+theme1 <- theme_minimal() +theme(plot.title = element_text(size = rel(1.5),
+                              face = "bold", vjust = 1.5),
+    axis.title = element_text(face = "bold",size=12),
+    legend.position = "top",
+ 
+    legend.key.size = unit(0.4, "cm"),
+    legend.key = element_rect(fill = "black"),
+    axis.title.y = element_text(vjust= 1.8), axis.title.x = element_text(vjust= -0.5,size=12),
+  axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),axis.text = element_text(size=9, face="bold",colour = "black"), axis.ticks.y = element_line(size = 0.5, colour = "black"),axis.ticks.length = unit(2, "pt"))
+
+tt3 <- ttheme_minimal(
+  core=list(bg_params = list(fill = "white", col=NA),
+            fg_params=list(fontface=3)),
+  colhead=list(fg_params=list(col="black", fontface=4L)),
+  rowhead=list(fg_params=list(col="black", fontface=3L)),colhead=list(fg_params = list(parse=TRUE)))
+```
+
+```{r echo=FALSE, cache=FALSE, results=FALSE, warning=FALSE, comment=FALSE,message=FALSE,fig.height=5,fig.width=5,fig.align="center"}
+#reading file
+df <- read_excel("figure1-data.xlsx", sheet="Sheet1")
+list2 <- c("#FFFFFF","#DADAEB","#9E9AC8","#FFFFFF","#C6DBEF","#6BAED6","#FFFFFF","#FEE6CE","#FDAE6B")
+list3 <- c("Uninfected","PBS","S.marcescens","Uninfected1","PBS1","S.aureus","Uninfected4","PBS4","L.monocytogenes")
+numlist<- c(0,20,40,60,80,100)
+```
+
+```{r echo=FALSE, cache=FALSE, results=FALSE, warning=FALSE, comment=FALSE,message=FALSE,fig.height=5,fig.align='center'}
+
+
+
+
+
+#courtship index
+
+p1 <- ggplot(data=df, aes(x = factor(Treatment, level = list3), y=CI)) +stat_boxplot(geom = 'errorbar',width = 0.15)+ 
+  geom_boxplot(width=0.45,outlier.size = -1, fill=list2)+
+  ylab("Courtship Index")+ 
+  xlab("Male Treatment") +scale_y_continuous(expand = c(0, 0),breaks=numlist)+
+  theme1+ coord_cartesian(clip="off", ylim=c(0, 100))+ 
+  facet_wrap(~ Group, scale="free")
+
+```
+
+
+
+
+
+```{r echo=FALSE, cache=FALSE, results=FALSE, warning=FALSE, comment=FALSE,message=FALSE,fig.height=5,fig.align="center"}
+# Prop copulating
+a <- df[df$Treatment=="Uninfected",]
+b <- df[df$Treatment== "PBS",]
+c <- df[df$Treatment== "S.marcescens",]
+
+d <- df[df$Treatment=="Uninfected1",]
+e <- df[df$Treatment== "PBS1",]
+f <- df[df$Treatment== "S.aureus",]
+
+
+
+m <- df[df$Treatment=="Uninfected4",]
+n <- df[df$Treatment== "PBS4",]
+o <- df[df$Treatment== "L.monocytogenes",]
+
+
+
+a1 <- (1- sum(is.na(a$CoL))/nrow(a)) *100
+b1 <- (1- sum(is.na(b$CoL))/nrow(b))*100 
+c1 <- (1- sum(is.na(c$CoL))/nrow(c))*100 
+
+d1 <- (1- sum(is.na(d$CoL))/nrow(d)) *100
+e1 <- (1- sum(is.na(e$CoL))/nrow(e))*100 
+f1 <- (1- sum(is.na(f$CoL))/nrow(f))*100 
+
+
+
+m1 <- (1- sum(is.na(m$CoL))/nrow(m)) *100
+n1 <- (1- sum(is.na(n$CoL))/nrow(n))*100 
+o1 <- (1- sum(is.na(o$CoL))/nrow(o))*100 
+
+
+
+propcourt <- data.frame(female=list3,pi=c(a1,b1,c1,d1,e1,f1,m1,n1,o1),group=c(1,1,1,2,2,2,3,3,3))
+
+p2<- ggplot(data=propcourt, aes(x = factor(female, level = list3), y=pi)) +
+  geom_bar(width=0.44,stat="identity",color="black", fill=list2)+
+  labs(y="Mating Success",x="Colours")+  
+  xlab("Male Treatment") + theme1+ 
+  scale_y_continuous(expand = c(0, 0),limits = c(0,100),breaks = numlist)+coord_cartesian(clip="off")+ 
+  facet_wrap(~ group, scale="free")
+
+
+g1 <- df[df$Group==1,]
+g2 <- df[df$Group==2,]
+g3 <- df[df$Group==3,]
+
+#kruskal.test(CI ~ Treatment,g4)
+#dunnTest(CoL ~ Treatment,g5)
+
+```
+
+\newpage
+```{r echo=FALSE, fig.align="center", fig.height=5, fig.width=8, message=FALSE, warning=FALSE, cache=FALSE, comment=FALSE, results=FALSE}
+
+#copulation duration
+grid.arrange(p1,p2)
+
+
+```
+
+
+
+\newpage
+```{r echo=FALSE, fig.align="center", fig.height=1, fig.width=9, message=FALSE, warning=FALSE, cache=FALSE, comment=FALSE, results=FALSE}
+
+#copulation duration
+g1 <- df[df$Group=="1",]
+kruskal.test(CI ~ Treatment, g1)
+stat1 <-dunnTest(CI ~ Treatment, g1,method = "bonferroni")
+tab1<-grid.table(stat1$res)
+pairwise.fisher.test(c(sum(is.na(a$CoL)), sum(is.na(b$CoL)), sum(is.na(c$CoL))), c(nrow(a), nrow(b), nrow(c)), p.adjust.method="bonferroni")
+
+
+
+```
+```{r echo=FALSE, fig.align="center", fig.height=1, fig.width=9, message=FALSE, warning=FALSE, cache=FALSE, comment=FALSE, results=FALSE}
+
+#copulation duration
+
+g2 <- df[df$Group=="2",];
+kruskal.test(CI ~ Treatment, g2)
+stat2 <-dunnTest(CI ~ Treatment, g2, method = "bonferroni")
+tab2<-grid.table(stat2$res)
+pairwise.fisher.test(c(sum(is.na(d$CoL)), sum(is.na(e$CoL)), sum(is.na(f$CoL))), c(nrow(d), nrow(e), nrow(f)), p.adjust.method="bonferroni")
+
+
+```
+
+```{r echo=FALSE, fig.align="center", fig.height=1, fig.width=9, message=FALSE, warning=FALSE, cache=FALSE, comment=FALSE, results=FALSE}
+
+#copulation duration
+
+g3 <- df[df$Group=="3",]
+kruskal.test(CI ~ Treatment, g3)
+stat3 <-dunnTest(CI ~ Treatment, g3, method = "bonferroni")
+tab3<-grid.table(stat3$res)
+pairwise.fisher.test(c(sum(is.na(d$CoL)), sum(is.na(e$CoL)), sum(is.na(f$CoL))), c(nrow(d), nrow(e), nrow(f)), p.adjust.method="bonferroni")
+
+
+```
+
+\newpage
+```{r echo=FALSE, fig.align="center", fig.height=1, fig.width=9, message=FALSE, warning=FALSE, cache=FALSE, comment=FALSE, results=TRUE}
+
+#copulation duration
+pairwise.fisher.test(c(sum(is.na(a$CoL)), sum(is.na(b$CoL)), sum(is.na(c$CoL))), c(nrow(a), nrow(b), nrow(c)), p.adjust.method="bonferroni")
+pairwise.fisher.test(c(sum(is.na(d$CoL)), sum(is.na(e$CoL)), sum(is.na(f$CoL))), c(nrow(d), nrow(e), nrow(f)), p.adjust.method="bonferroni")
+
+
+pairwise.fisher.test(c(sum(is.na(m$CoL)), sum(is.na(n$CoL)), sum(is.na(o$CoL))), c(nrow(m), nrow(n), nrow(o)), p.adjust.method="bonferroni")
+
+```
+
